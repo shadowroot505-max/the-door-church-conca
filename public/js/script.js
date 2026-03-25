@@ -263,6 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const userAvatar = document.getElementById('userAvatar');
             const userName = document.getElementById('userName');
             const signOutBtn = document.getElementById('signOutBtn');
+            const adminDashboardLink = document.getElementById('adminDashboardLink');
+
+            const ADMIN_EMAIL = 'shadowroot505@gmail.com';
 
             if (signInBtn) {
                 signInBtn.addEventListener('click', () => {
@@ -288,6 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         userProfile.style.display = 'flex';
                         userName.textContent = user.displayName;
                         userAvatar.src = user.photoURL;
+                        
+                        // Show dashboard link for admin
+                        if (user.email === ADMIN_EMAIL && adminDashboardLink) {
+                            adminDashboardLink.style.display = 'block';
+                        } else if (adminDashboardLink) {
+                            adminDashboardLink.style.display = 'none';
+                        }
                     }
                 } else {
                     if (signInBtn) signInBtn.style.display = 'block';
