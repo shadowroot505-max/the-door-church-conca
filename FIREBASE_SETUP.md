@@ -20,20 +20,34 @@ To make your website's authentication and database work correctly, you need to e
 ### 3. Firebase Storage (For Sermon Video Uploads)
 1. Go to **Storage** in the Firebase Console and click **Get Started**.
 2. Click **Next** and **Done**.
-3. Go to the **Rules** tab and set them to:
+3. **Rules**: Go to the **Rules** tab and set them to:
 ```javascript
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /sermons/{allPaths=**} {
-      // Allow anyone to read
       allow read: if true;
-      // Only allow the admin to upload
       allow write: if request.auth != null && request.auth.token.email == 'shadowroot505@gmail.com';
     }
   }
 }
 ```
+
+#### Important: Configure CORS for Local Testing
+If you are testing the upload from `localhost`, your browser may block the upload unless you configure CORS.
+1. Create a file named `cors.json` with this content:
+```json
+[
+  {
+    "origin": ["*"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]
+```
+2. Run this command (requires Google Cloud SDK):
+`gsutil cors set cors.json gs://<your-project-id>.appspot.com`
 
 ### 4. Firestore Security Rules (VERY IMPORTANT)
 Your app needs permission to read and write data. You must update the rules to allow the contact form to save messages and let you read them as an admin.

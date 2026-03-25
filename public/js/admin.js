@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     sermonSubmitBtn.disabled = true;
                     sermonSubmitBtn.textContent = 'Uploading...';
                     
-                    const storage = getStorage();
+                    const storage = getStorage(app);
                     const storageRef = ref(storage, `sermons/${Date.now()}_${videoFile.name}`);
                     const uploadTask = uploadBytesResumable(storageRef, videoFile);
 
@@ -403,7 +403,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         );
                     });
                 } catch (err) {
-                    alert('Upload failed: ' + err.message);
+                    console.error('Upload error details:', err);
+                    alert('Upload failed: ' + err.message + '\n\nPlease check if you have enabled Firebase Storage in your console and configured CORS if testing locally.');
                     sermonSubmitBtn.disabled = false;
                     sermonSubmitBtn.textContent = 'Save Sermon';
                     return;
