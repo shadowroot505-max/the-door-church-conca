@@ -233,6 +233,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadAboutMedia(db) {
+        const aboutMediaContainer = document.getElementById('aboutMediaContainer');
+        if (!aboutMediaContainer) return;
+
+        try {
+            const aboutMediaDoc = await getDoc(doc(db, 'siteSettings', 'aboutMedia'));
+            if (aboutMediaDoc.exists()) {
+                const data = aboutMediaDoc.data();
+                if (data.enabled && data.url) {
+                    let mediaHtml = '';
+                    if (data.type === 'youtube') {
+                        mediaHtml = `
+                            <iframe src="${data.url}" title="Our Story Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%; height:100%;"></iframe>`;
+                    } else if (data.type === 'image') {
+                        mediaHtml = `
+                            <img src="${data.url}" alt="Our Story" style="width:100%; height:100%; object-fit:cover;">`;
+                    } else if (data.type === 'file') {
+                        mediaHtml = `
+                            <video src="${data.url}" controls style="width:100%; height:100%; object-fit:cover;"></video>`;
+                    }
+
+                    if (mediaHtml) {
+                        aboutMediaContainer.innerHTML = mediaHtml;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error loading about media settings:', err);
+        }
+    }
+
     // --- Dynamic Data Fetching ---
     async function loadDynamicContent(db) {
         try {
@@ -351,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             loadSiteSettings(db);
+            loadAboutMedia(db);
             loadDynamicContent(db);
         } catch (error) {
             console.error("Error initializing Firebase:", error);

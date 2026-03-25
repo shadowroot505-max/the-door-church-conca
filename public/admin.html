@@ -249,6 +249,49 @@
             </div>
         </div>
 
+        <!-- Our Story Media Settings -->
+        <div class="dashboard-section">
+            <h2>Our Story Media (Beside "Our Story" text)</h2>
+            <div class="add-form">
+                <form id="aboutMediaForm">
+                    <div class="form-group">
+                        <label>Media Type</label>
+                        <div style="display:flex; gap:20px; margin-bottom:10px;">
+                            <label style="font-weight:normal;"><input type="radio" name="aboutMediaType" value="youtube" checked id="aboutMediaYoutube"> YouTube Video</label>
+                            <label style="font-weight:normal;"><input type="radio" name="aboutMediaType" value="image" id="aboutMediaImage"> Featured Image</label>
+                            <label style="font-weight:normal;"><input type="radio" name="aboutMediaType" value="file" id="aboutMediaFile"> Upload Video File</label>
+                        </div>
+                    </div>
+
+                    <!-- YouTube/Image URL Input -->
+                    <div id="aboutMediaUrlInputArea" class="form-group">
+                        <label id="aboutMediaUrlLabel">YouTube Embed URL</label>
+                        <input type="text" id="aboutMediaUrl" placeholder="https://www.youtube.com/embed/...">
+                        <small id="aboutMediaUrlHint" style="color: #666;">Make sure it's an <strong>embed</strong> link for YouTube.</small>
+                    </div>
+
+                    <!-- File Upload Input -->
+                    <div id="aboutMediaFileInputArea" class="form-group" style="display:none;">
+                        <label>Video File</label>
+                        <input type="file" id="aboutMediaFileInput" accept="video/*">
+                        <div id="aboutMediaUploadProgressContainer" style="display:none; margin-top:10px;">
+                            <div style="width:100%; height:10px; background:#eee; border-radius:5px; overflow:hidden;">
+                                <div id="aboutMediaUploadProgressBar" style="width:0%; height:100%; background: #4b6b1d; transition: width 0.3s;"></div>
+                            </div>
+                            <small id="aboutMediaUploadStatusText" style="color:#666;"></small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><input type="checkbox" id="aboutMediaEnabled"> Enable Custom Media</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="saveAboutMediaBtn">Save Our Story Media</button>
+                    <span id="aboutMediaStatus" style="margin-left: 10px; color: green; font-weight: bold;"></span>
+                </form>
+            </div>
+        </div>
+
         <!-- Events Management -->
         <div class="dashboard-section">
             <h2>Manage Events</h2>

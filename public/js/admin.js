@@ -47,6 +47,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     const settingsForm = document.getElementById('settingsForm');
     const settingsStatus = document.getElementById('settingsStatus');
 
+    // About Media form elements
+    const aboutMediaForm = document.getElementById('aboutMediaForm');
+    const aboutMediaStatus = document.getElementById('aboutMediaStatus');
+    const aboutMediaUrlInputArea = document.getElementById('aboutMediaUrlInputArea');
+    const aboutMediaFileInputArea = document.getElementById('aboutMediaFileInputArea');
+    const aboutMediaUrlLabel = document.getElementById('aboutMediaUrlLabel');
+    const aboutMediaUrlHint = document.getElementById('aboutMediaUrlHint');
+    const aboutMediaUrlField = document.getElementById('aboutMediaUrl');
+    const aboutMediaFileInput = document.getElementById('aboutMediaFileInput');
+    const aboutMediaEnabledField = document.getElementById('aboutMediaEnabled');
+    const aboutMediaTypeRadios = document.getElementsByName('aboutMediaType');
+
+    // Toggle about media inputs based on type
+    const updateAboutMediaUI = (type) => {
+        if (type === 'file') {
+            aboutMediaUrlInputArea.style.display = 'none';
+            aboutMediaFileInputArea.style.display = 'block';
+        } else {
+            aboutMediaUrlInputArea.style.display = 'block';
+            aboutMediaFileInputArea.style.display = 'none';
+            if (type === 'youtube') {
+                aboutMediaUrlLabel.textContent = 'YouTube Embed URL';
+                aboutMediaUrlHint.innerHTML = 'Make sure it\'s an <strong>embed</strong> link for YouTube.';
+                aboutMediaUrlField.placeholder = 'https://www.youtube.com/embed/...';
+            } else {
+                aboutMediaUrlLabel.textContent = 'Image URL';
+                aboutMediaUrlHint.textContent = 'Provide a direct link to the image.';
+                aboutMediaUrlField.placeholder = 'https://example.com/image.jpg';
+            }
+        }
+    };
+
+    aboutMediaTypeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => updateAboutMediaUI(e.target.value));
+    });
+
     const ADMIN_EMAIL = 'shadowroot505@gmail.com';
 
     let firebaseConfig;
@@ -111,6 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadDashboardData() {
         await fetchSettings();
+        await fetchAboutMedia();
         await fetchEvents();
         await fetchSermons();
         await fetchMessages();
@@ -119,6 +156,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // =============================================
     // SITE SETTINGS
     // =============================================
+    async function fetchAboutMedia() {
+        try {
+            const aboutMediaDoc = await getDoc(doc(db, 'siteSettings', 'aboutMedia'));
+            if (aboutMediaDoc.exists()) {
+                const data = aboutMediaDoc.data();
+                aboutMediaEnabledField.checked = data.enabled || false;
+                aboutMediaUrlField.value = data.url || '';
+                
+                const type = data.type || 'youtube';
+                const radio = document.querySelector(`input[name="aboutMediaType"][value="${type}"]`);
+                if (radio) radio.checked = true;
+                
+                updateAboutMediaUI(type);
+            }
+        } catch (err) {
+            console.error('Error loading about media settings:', err);
+        }
+    }
+
     async function fetchSettings() {
         try {
             const settingsDoc = await getDoc(doc(db, 'siteSettings', 'general'));
@@ -196,6 +252,64 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setTimeout(() => { contactStatus.textContent = ''; }, 3000);
             } catch (err) {
                 alert('Error saving settings: ' + err.message);
+            }
+        });
+    }
+
+    if (aboutMediaForm) {
+        aboutMediaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saveBtn = document.getElementById('saveAboutMediaBtn');
+            const typeValue = document.querySelector('input[name="aboutMediaType"]:checked').value;
+            const isEnabled = aboutMediaEnabledField.checked;
+            let finalUrl = aboutMediaUrlField.value;
+            const mediaFile = aboutMediaFileInput.files[0];
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                if (typeValue === 'file' && mediaFile) {
+                    const storage = getStorage(app);
+                    const storageRef = ref(storage, `aboutMedia/${Date.now()}_${mediaFile.name}`);
+                    const uploadTask = uploadBytesResumable(storageRef, mediaFile);
+
+                    const progressContainer = document.getElementById('aboutMediaUploadProgressContainer');
+                    const progressBar = document.getElementById('aboutMediaUploadProgressBar');
+                    const statusText = document.getElementById('aboutMediaUploadStatusText');
+
+                    progressContainer.style.display = 'block';
+
+                    finalUrl = await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed',
+                            (snapshot) => {
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                progressBar.style.width = progress + '%';
+                                statusText.textContent = `Upload is ${Math.round(progress)}% done`;
+                            },
+                            (error) => reject(error),
+                            () => {
+                                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                                    resolve(downloadURL);
+                                });
+                            }
+                        );
+                    });
+                } else if (typeValue === 'youtube') {
+                    finalUrl = formatYoutubeUrl(finalUrl);
+                }
+
+                const payload = { type: typeValue, url: finalUrl, enabled: isEnabled };
+                await setDoc(doc(db, 'siteSettings', 'aboutMedia'), payload);
+
+                aboutMediaStatus.textContent = '✓ Our Story Media saved!';
+                document.getElementById('aboutMediaUploadProgressContainer').style.display = 'none';
+                setTimeout(() => { aboutMediaStatus.textContent = ''; }, 3000);
+            } catch (err) {
+                alert('Error saving about media: ' + err.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Our Story Media';
             }
         });
     }
