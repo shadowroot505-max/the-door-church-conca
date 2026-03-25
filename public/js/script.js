@@ -194,6 +194,39 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (aboutParagraph) aboutParagraph.textContent = data.aboutText;
                     }
                 }
+
+                // Update Leadership
+                const l1Img = document.getElementById('leader1Img');
+                const l1Name = document.getElementById('leader1Name');
+                const l1Role = document.getElementById('leader1Role');
+                if (data.leader1ImgUrl && l1Img) l1Img.src = data.leader1ImgUrl;
+                if (data.leader1Name && l1Name) l1Name.textContent = data.leader1Name;
+                if (data.leader1Role && l1Role) l1Role.textContent = data.leader1Role;
+
+                const l2Img = document.getElementById('leader2Img');
+                const l2Name = document.getElementById('leader2Name');
+                const l2Role = document.getElementById('leader2Role');
+                if (data.leader2ImgUrl && l2Img) l2Img.src = data.leader2ImgUrl;
+                if (data.leader2Name && l2Name) l2Name.textContent = data.leader2Name;
+                if (data.leader2Role && l2Role) l2Role.textContent = data.leader2Role;
+
+                const l3Img = document.getElementById('leader3Img');
+                const l3Name = document.getElementById('leader3Name');
+                const l3Role = document.getElementById('leader3Role');
+                if (data.leader3ImgUrl && l3Img) l3Img.src = data.leader3ImgUrl;
+                if (data.leader3Name && l3Name) l3Name.textContent = data.leader3Name;
+                if (data.leader3Role && l3Role) l3Role.textContent = data.leader3Role;
+
+                // Update Contact
+                const cLoc = document.getElementById('contactLocation');
+                const cPhone = document.getElementById('contactPhone');
+                const cEmail = document.getElementById('contactEmail');
+                const cMap = document.getElementById('contactMap');
+
+                if (data.contactLocation && cLoc) cLoc.innerHTML = data.contactLocation;
+                if (data.contactPhone && cPhone) cPhone.textContent = data.contactPhone;
+                if (data.contactEmail && cEmail) cEmail.textContent = data.contactEmail;
+                if (data.contactMapUrl && cMap) cMap.src = data.contactMapUrl;
             }
         } catch (err) {
             console.error('Error loading site settings:', err);

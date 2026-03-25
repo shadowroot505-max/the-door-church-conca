@@ -114,6 +114,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('heroTitle').value = data.heroTitle || '';
                 document.getElementById('heroSubtitle').value = data.heroSubtitle || '';
                 document.getElementById('aboutText').value = data.aboutText || '';
+
+                // Leadership
+                document.getElementById('leader1ImgUrl').value = data.leader1ImgUrl || '';
+                document.getElementById('leader1NameVal').value = data.leader1Name || '';
+                document.getElementById('leader1RoleVal').value = data.leader1Role || '';
+                document.getElementById('leader2ImgUrl').value = data.leader2ImgUrl || '';
+                document.getElementById('leader2NameVal').value = data.leader2Name || '';
+                document.getElementById('leader2RoleVal').value = data.leader2Role || '';
+                document.getElementById('leader3ImgUrl').value = data.leader3ImgUrl || '';
+                document.getElementById('leader3NameVal').value = data.leader3Name || '';
+                document.getElementById('leader3RoleVal').value = data.leader3Role || '';
+
+                // Contact
+                document.getElementById('contactLocationVal').value = data.contactLocation || '';
+                document.getElementById('contactPhoneVal').value = data.contactPhone || '';
+                document.getElementById('contactEmailVal').value = data.contactEmail || '';
+                document.getElementById('contactMapUrl').value = data.contactMapUrl || '';
             }
         } catch (err) {
             console.error('Error loading settings:', err);
@@ -133,6 +150,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await setDoc(doc(db, 'siteSettings', 'general'), payload, { merge: true });
                 settingsStatus.textContent = '✓ Settings saved!';
                 setTimeout(() => { settingsStatus.textContent = ''; }, 3000);
+            } catch (err) {
+                alert('Error saving settings: ' + err.message);
+            }
+        });
+    }
+
+    const contactSettingsForm = document.getElementById('contactSettingsForm');
+    const contactStatus = document.getElementById('contactStatus');
+    if (contactSettingsForm) {
+        contactSettingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                leader1ImgUrl: document.getElementById('leader1ImgUrl').value,
+                leader1Name: document.getElementById('leader1NameVal').value,
+                leader1Role: document.getElementById('leader1RoleVal').value,
+                leader2ImgUrl: document.getElementById('leader2ImgUrl').value,
+                leader2Name: document.getElementById('leader2NameVal').value,
+                leader2Role: document.getElementById('leader2RoleVal').value,
+                leader3ImgUrl: document.getElementById('leader3ImgUrl').value,
+                leader3Name: document.getElementById('leader3NameVal').value,
+                leader3Role: document.getElementById('leader3RoleVal').value,
+                contactLocation: document.getElementById('contactLocationVal').value,
+                contactPhone: document.getElementById('contactPhoneVal').value,
+                contactEmail: document.getElementById('contactEmailVal').value,
+                contactMapUrl: document.getElementById('contactMapUrl').value
+            };
+            try {
+                await setDoc(doc(db, 'siteSettings', 'general'), payload, { merge: true });
+                contactStatus.textContent = '✓ Contact & Leadership saved!';
+                setTimeout(() => { contactStatus.textContent = ''; }, 3000);
             } catch (err) {
                 alert('Error saving settings: ' + err.message);
             }

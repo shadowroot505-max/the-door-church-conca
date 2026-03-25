@@ -208,6 +208,47 @@
             </div>
         </div>
 
+        <!-- Leadership & Contact Settings -->
+        <div class="dashboard-section">
+            <h2>Leadership & Contact Settings</h2>
+            <div class="add-form">
+                <form id="contactSettingsForm">
+                    <h3 style="margin-top:0;">Our Leadership</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
+                        <div>
+                            <h4>Leader 1</h4>
+                            <div class="form-group"><label>Image URL</label><input type="text" id="leader1ImgUrl"></div>
+                            <div class="form-group"><label>Name</label><input type="text" id="leader1NameVal"></div>
+                            <div class="form-group"><label>Role</label><input type="text" id="leader1RoleVal"></div>
+                        </div>
+                        <div>
+                            <h4>Leader 2</h4>
+                            <div class="form-group"><label>Image URL</label><input type="text" id="leader2ImgUrl"></div>
+                            <div class="form-group"><label>Name</label><input type="text" id="leader2NameVal"></div>
+                            <div class="form-group"><label>Role</label><input type="text" id="leader2RoleVal"></div>
+                        </div>
+                        <div>
+                            <h4>Leader 3</h4>
+                            <div class="form-group"><label>Image URL</label><input type="text" id="leader3ImgUrl"></div>
+                            <div class="form-group"><label>Name</label><input type="text" id="leader3NameVal"></div>
+                            <div class="form-group"><label>Role</label><input type="text" id="leader3RoleVal"></div>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                    
+                    <h3>Contact & Map</h3>
+                    <div class="form-group"><label>Address (use &lt;br&gt; for new lines)</label><input type="text" id="contactLocationVal"></div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="contactPhoneVal"></div>
+                    <div class="form-group"><label>Email</label><input type="text" id="contactEmailVal"></div>
+                    <div class="form-group"><label>Google Maps Embed URL (src link)</label><input type="text" id="contactMapUrl" placeholder="https://www.google.com/maps/embed?pb=..."></div>
+                    
+                    <button type="submit" class="btn btn-primary" id="saveContactBtn">Save Contact & Leadership</button>
+                    <span id="contactStatus" style="margin-left: 10px; color: green; font-weight: bold;"></span>
+                </form>
+            </div>
+        </div>
+
         <!-- Events Management -->
         <div class="dashboard-section">
             <h2>Manage Events</h2>
