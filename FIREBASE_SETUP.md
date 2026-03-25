@@ -17,7 +17,25 @@ To make your website's authentication and database work correctly, you need to e
 3. Choose a location (e.g., `nam5 (us-central)`) and click **"Next"**.
 4. Select **"Start in production mode"** and click **"Create"**.
 
-## 3. Configure Security Rules (VERY IMPORTANT)
+### 3. Firebase Storage (For Sermon Video Uploads)
+1. Go to **Storage** in the Firebase Console and click **Get Started**.
+2. Click **Next** and **Done**.
+3. Go to the **Rules** tab and set them to:
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /sermons/{allPaths=**} {
+      // Allow anyone to read
+      allow read: if true;
+      // Only allow the admin to upload
+      allow write: if request.auth != null && request.auth.token.email == 'shadowroot505@gmail.com';
+    }
+  }
+}
+```
+
+### 4. Firestore Security Rules (VERY IMPORTANT)
 Your app needs permission to read and write data. You must update the rules to allow the contact form to save messages and let you read them as an admin.
 
 1. In the Firestore tab, click on **"Rules"**.

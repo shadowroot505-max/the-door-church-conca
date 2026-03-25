@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const loginArea = document.getElementById('loginArea');
@@ -25,6 +26,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sermonIdField = document.getElementById('sermonId');
     const sermonSubmitBtn = document.getElementById('sermonSubmitBtn');
     const sermonCancelBtn = document.getElementById('sermonCancelBtn');
+
+    // Video Source Toggle
+    window.toggleVideoSource = (source) => {
+        const youtubeInput = document.getElementById('youtubeInput');
+        const fileInputArea = document.getElementById('fileInputArea');
+        if (source === 'youtube') {
+            youtubeInput.style.display = 'block';
+            fileInputArea.style.display = 'none';
+        } else {
+            youtubeInput.style.display = 'none';
+            fileInputArea.style.display = 'block';
+        }
+    };
 
     // Messages element
     const messagesList = document.getElementById('messagesList');
@@ -338,29 +352,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         sermonFormTitle.textContent = 'Add New Sermon';
         sermonSubmitBtn.textContent = 'Save Sermon';
         sermonCancelBtn.classList.add('hidden');
+        document.getElementById('uploadProgressContainer').style.display = 'none'; // Hide progress bar
+        document.getElementById('uploadProgressBar').style.width = '0%';
+        document.getElementById('uploadStatusText').textContent = '';
+        document.getElementById('videoSourceYoutube').checked = true; // Default to YouTube
+        toggleVideoSource('youtube'); // Reset UI to YouTube input
     }
 
     if (addSermonForm) {
         addSermonForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const payload = {
-                title: document.getElementById('sermonTitle').value,
-                date: document.getElementById('sermonDate').value,
-                preacher: document.getElementById('sermonPreacher').value,
-                video_url: formatYoutubeUrl(document.getElementById('sermonUrl').value)
-            };
+            const id = sermonIdField.value;
+            const title = document.getElementById('sermonTitle').value;
+            const date = document.getElementById('sermonDate').value;
+            const preacher = document.getElementById('sermonPreacher').value;
+            const videoSource = document.querySelector('input[name="videoSource"]:checked').value;
+            
+            let url = document.getElementById('sermonUrl').value;
+            const videoFile = document.getElementById('sermonFile').files[0];
 
-            const editingId = sermonIdField.value;
+            // If file upload is selected
+            if (videoSource === 'file' && videoFile) {
+                try {
+                    sermonSubmitBtn.disabled = true;
+                    sermonSubmitBtn.textContent = 'Uploading...';
+                    
+                    const storage = getStorage();
+                    const storageRef = ref(storage, `sermons/${Date.now()}_${videoFile.name}`);
+                    const uploadTask = uploadBytesResumable(storageRef, videoFile);
+
+                    const progressContainer = document.getElementById('uploadProgressContainer');
+                    const progressBar = document.getElementById('uploadProgressBar');
+                    const statusText = document.getElementById('uploadStatusText');
+                    
+                    progressContainer.style.display = 'block';
+
+                    url = await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed', 
+                            (snapshot) => {
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                progressBar.style.width = progress + '%';
+                                statusText.textContent = `Upload is ${Math.round(progress)}% done`;
+                            }, 
+                            (error) => reject(error), 
+                            () => {
+                                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                                    resolve(downloadURL);
+                                });
+                            }
+                        );
+                    });
+                } catch (err) {
+                    alert('Upload failed: ' + err.message);
+                    sermonSubmitBtn.disabled = false;
+                    sermonSubmitBtn.textContent = 'Save Sermon';
+                    return;
+                }
+            } else if (videoSource === 'youtube') {
+                url = formatYoutubeUrl(url); // Format YouTube URL
+            }
+
+            const sermonData = { title, date, preacher, url, type: videoSource };
 
             try {
-                if (editingId) {
-                    await updateDoc(doc(db, 'sermons', editingId), payload);
+                if (id) {
+                    await updateDoc(doc(db, 'sermons', id), sermonData);
                 } else {
-                    await addDoc(collection(db, 'sermons'), payload);
+                    await addDoc(collection(db, 'sermons'), sermonData);
                 }
                 resetSermonForm();
+                sermonSubmitBtn.disabled = false;
+                sermonSubmitBtn.textContent = 'Save Sermon';
                 fetchSermons();
-            } catch (err) { alert(err.message); }
+            } catch (err) {
+                console.error('Error saving sermon:', err);
+                alert('Error saving sermon: ' + err.message);
+                sermonSubmitBtn.disabled = false;
+                sermonSubmitBtn.textContent = 'Save Sermon';
+            }
         });
     }
 

@@ -261,18 +261,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const sermonsContainer = document.getElementById('sermonsContainer');
             if (sermonsContainer) {
-                sermonsContainer.innerHTML = sermons.map((s, idx) => `
-                    <div class="sermon-card ${idx === 0 ? 'featured' : ''}">
-                        <div class="sermon-video">
-                            <iframe src="${s.video_url}" title="Sermon" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                sermonsContainer.innerHTML = sermons.map((s, idx) => {
+                    const videoUrl = s.url || s.video_url || '';
+                    const isYoutube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || s.type === 'youtube' || !s.type;
+                    
+                    let videoElement = '';
+                    if (isYoutube) {
+                        videoElement = `<iframe src="${videoUrl}" title="Sermon" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                    } else {
+                        videoElement = `<video src="${videoUrl}" controls style="width:100%; height:100%; object-fit:cover;"></video>`;
+                    }
+
+                    return `
+                        <div class="sermon-card ${idx === 0 ? 'featured' : ''}">
+                            <div class="sermon-video">
+                                ${videoElement}
+                            </div>
+                            <div class="sermon-info">
+                                <span class="sermon-date">${s.date || ''}</span>
+                                <h3>${s.title || ''}</h3>
+                                <p>${s.preacher || ''}</p>
+                            </div>
                         </div>
-                        <div class="sermon-info">
-                            <span class="sermon-date">${s.date || ''}</span>
-                            <h3>${s.title || ''}</h3>
-                            <p>${s.preacher || ''}</p>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         } catch(err) {
             console.error('Error fetching dynamic content:', err);
