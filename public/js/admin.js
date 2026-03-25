@@ -26,14 +26,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sermonSubmitBtn = document.getElementById('sermonSubmitBtn');
     const sermonCancelBtn = document.getElementById('sermonCancelBtn');
 
+    // Messages element
+    const messagesList = document.getElementById('messagesList');
+
     // Settings form elements
     const settingsForm = document.getElementById('settingsForm');
     const settingsStatus = document.getElementById('settingsStatus');
 
     const ADMIN_EMAIL = 'shadowroot505@gmail.com';
 
-    const response = await fetch('/api/firebase-config');
-    const firebaseConfig = await response.json();
+    let firebaseConfig;
+    try {
+        const response = await fetch('/api/firebase-config');
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+        firebaseConfig = await response.json();
+    } catch (err) {
+        console.error('Failed to load Firebase config:', err);
+        loginError.textContent = 'Failed to connect to server. Please try again later.';
+        loginError.classList.remove('hidden');
+        return;
+    }
     
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -87,6 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await fetchSettings();
         await fetchEvents();
         await fetchSermons();
+        await fetchMessages();
     }
 
     // =============================================
@@ -137,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="card">
                 <div class="card-details">
                     <h4>${e.title} (${e.month} ${e.day})</h4>
-                    <p>${e.time} | ${e.description.substring(0, 60)}...</p>
+                    <p>${e.time || 'N/A'} | ${(e.description || '').substring(0, 60)}...</p>
                 </div>
                 <div class="card-actions">
                     <button class="btn btn-primary edit-event-btn" data-id="${e.id}"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
@@ -212,6 +225,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function formatYoutubeUrl(url) {
+        if (!url) return '';
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        if (match && match[2].length === 11) {
+            return `https://www.youtube.com/embed/${match[2]}`;
+        }
+        return url;
+    }
+
     // =============================================
     // SERMONS - CRUD
     // =============================================
@@ -277,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 title: document.getElementById('sermonTitle').value,
                 date: document.getElementById('sermonDate').value,
                 preacher: document.getElementById('sermonPreacher').value,
-                video_url: document.getElementById('sermonUrl').value
+                video_url: formatYoutubeUrl(document.getElementById('sermonUrl').value)
             };
 
             const editingId = sermonIdField.value;
@@ -295,6 +318,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =============================================
+    // MESSAGES - Display and Delete
+    // =============================================
+    async function fetchMessages() {
+        if (!messagesList) return;
+        try {
+            const messagesSnapshot = await getDocs(collection(db, 'messages'));
+            const messages = messagesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            
+            // Sort by timestamp if available (newest first)
+            messages.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+            if (messages.length === 0) {
+                messagesList.innerHTML = '<p>No messages yet.</p>';
+            } else {
+                messagesList.innerHTML = messages.map(m => `
+                    <div class="card" style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
+                        <div class="card-details" style="width:100%;">
+                            <h4 style="margin:0;">From: ${m.name} (${m.email})</h4>
+                            <p style="color: #444; font-size: 1.1rem; margin: 10px 0; background: #f9f9f9; padding: 10px; border-radius: 4px; border-left: 4px solid var(--primary-color);">${m.message}</p>
+                            <p style="font-size: 0.8rem; margin:0; color: #888;">Received: ${new Date(m.timestamp).toLocaleString()}</p>
+                        </div>
+                        <div class="card-actions" style="align-self: flex-end;">
+                            <button class="btn btn-danger delete-btn" data-type="messages" data-id="${m.id}"><i class="fa-solid fa-trash"></i> Delete Message</button>
+                        </div>
+                    </div>
+                `).join('');
+                attachDeleteListeners();
+            }
+        } catch (err) {
+            console.error('Error fetching messages:', err);
+            messagesList.innerHTML = '<p>Error loading messages.</p>';
+        }
+    }
+
+    // =============================================
     // DELETE (shared)
     // =============================================
     function attachDeleteListeners() {
@@ -307,6 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await deleteDoc(doc(db, type, id));
                     if (type === 'events') fetchEvents();
                     if (type === 'sermons') fetchSermons();
+                    if (type === 'messages') fetchMessages();
                 } catch(e) { alert(e.message); }
             }
         });

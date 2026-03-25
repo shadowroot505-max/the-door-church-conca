@@ -463,6 +463,17 @@ img {
 }
 
 /* Contact Section */
+.contact .section-title {
+    color: white;
+}
+
+.contact h3,
+.contact .info-item h4,
+.contact .info-item p,
+.contact .info-item i {
+    color: white;
+}
+
 .contact-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

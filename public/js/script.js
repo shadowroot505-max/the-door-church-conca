@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     // Mobile Menu Toggle
@@ -107,19 +107,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Contact Form Submission (Mock)
+    // Contact Form Submission
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
+        contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = contactForm.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
             
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
             btn.disabled = true;
+
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                message: document.getElementById('message').value,
+                timestamp: new Date().toISOString()
+            };
             
-            // Simulate network request
-            setTimeout(() => {
+            try {
+                // The db instance from initializeFirebase should be used, 
+                // but since it's local there, we can get it again.
+                const db = getFirestore();
+                await addDoc(collection(db, 'messages'), formData);
+
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Message Sent!';
                 btn.classList.add('btn-secondary');
                 btn.classList.remove('btn-primary');
@@ -131,7 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.classList.add('btn-primary');
                     btn.disabled = false;
                 }, 3000);
-            }, 1500);
+            } catch (err) {
+                console.error("Error sending message:", err);
+                btn.innerHTML = 'Error! Try again';
+                btn.disabled = false;
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 3000);
+            }
         });
     }
 
@@ -201,8 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="event-details">
                             <h3>${e.title}</h3>
-                            <p class="event-time"><i class="fa-regular fa-clock"></i> ${e.time}</p>
-                            <p>${e.description}</p>
+                            <p class="event-time"><i class="fa-regular fa-clock"></i> ${e.time || ''}</p>
+                            <p>${e.description || ''}</p>
                         </div>
                     </div>
                 `).join('');
@@ -216,9 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <iframe src="${s.video_url}" title="Sermon" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
                         <div class="sermon-info">
-                            <span class="sermon-date">${s.date}</span>
-                            <h3>${s.title}</h3>
-                            <p>${s.preacher}</p>
+                            <span class="sermon-date">${s.date || ''}</span>
+                            <h3>${s.title || ''}</h3>
+                            <p>${s.preacher || ''}</p>
                         </div>
                     </div>
                 `).join('');
@@ -232,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializeFirebase() {
         try {
             const response = await fetch('/api/firebase-config');
+            if (!response.ok) throw new Error(`Server returned ${response.status}`);
             const firebaseConfig = await response.json();
             
             const app = initializeApp(firebaseConfig);
